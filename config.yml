@@ -1,20 +1,35 @@
-baseURL: https://githubuser.github.io
+baseURL: https://dnjp.github.io
 languageCode: en-us
-title: Linus Torvalds
+title: Daniel Posthuma
 theme: "PaperMod"
 
 params:
-  homeInfoParams:
-    Title: Daniel Posthuma
-    Content: This is something shows in your homepage.
+  # homeInfoParams:
+  #   Title: Daniel Posthuma
+  #   #   Content: This is something shows in your homepage.
+  #   Content: 👋 I’m Daniel - a software engineer primarily interested in [distributed systems](https://en.wikipedia.org/wiki/Distributed_computing), [decentralized finance](https://en.wikipedia.org/wiki/Decentralized_finance), and [algorithmic trading]({{< ref "/pages/Learn Trading" >}}). I'm currently building high performance, low latency bidding systems for [Martin](https://martin.ai/) that support billions of requests per day, most of which are written in [Go]({{< ref "/pages/Go" >}}).
+
+  profileMode:
+    enabled: true
+    # title: "<Title>" # optional default will be site title
+    subtitle: 👋 I’m Daniel - a software engineer primarily interested in [distributed systems](https://en.wikipedia.org/wiki/Distributed_computing), [decentralized finance](https://en.wikipedia.org/wiki/Decentralized_finance), and [algorithmic trading]({{< ref "/pages/Learn Trading" >}}). I'm currently building high performance, low latency bidding systems for [Martin](https://martin.ai/) that support billions of requests per day, most of which are written in [Go]({{< ref "/pages/Go" >}}).
+    imageUrl: "https://pbs.twimg.com/profile_images/1545390972212846592/kupeZXy8_400x400.jpg" # optional
+    # imageTitle: "<title of image as alt>" # optional
+    imageWidth: 120 # custom size
+    imageHeight: 120 # custom size
+    buttons:
+      - name: Blog
+        url: "/blog"
+      # - name: Github
+      #   url: "https://github.com/"
 
   socialIcons: # optional
     - name: "github"
-      url: "https://github.com/XXX"
+      url: "https://github.com/dnjp"
     # - name: "youtube"
     #   url: "https://www.youtube.com/channel/XXX"
     - name: "twitter"
-      url: "https://twitter.com/XXX"
+      url: "https://twitter.com/_dnjp"
     # - name: "kofi"
     #   url: "https://buymeacoffee.com/XXX"
     # - name: "rss"
@@ -38,19 +53,19 @@ outputs:
 
 menu:
   main:
-    - identifier: categories
-      name: Categories
-      url: /categories/
-      weight: 10
-    - identifier: tags
-      name: Tags
-      url: /tags/
-      weight: 20
-    - identifier: search
-      name: Search
-      url: /search/
-      weight: 20
-    - identifier: archive
-      name: Archive
-      url: /archives/
+    # - identifier: categories
+    #   name: Categories
+    #   url: /categories/
+    #   weight: 10
+    # - identifier: tags
+    #   name: Tags
+    #   url: /tags/
+    #   weight: 20
+    # - identifier: search
+    #   name: Search
+    #   url: /search/
+    #   weight: 20
+    - identifier: blog
+      name: Blog
+      url: /blog/
       weight: 20
