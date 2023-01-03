@@ -5,7 +5,7 @@ theme: "PaperMod"
 
 params:
   homeInfoParams:
-    Title: Sup bruh 😎
+    Title: Daniel Posthuma
     Content: This is something shows in your homepage.
 
   socialIcons: # optional
@@ -20,8 +20,8 @@ params:
     # - name: "rss"
     #   url: "https://XXX.github.io/index.xml"
   ShowReadingTime: true
-  author: "Linus Torvalds"
-  contact: "LinusT@example.com"
+  author: "Daniel Posthuma"
+  contact: "hello@danieljames.life"
   feedlinks: true
   copyright: "<!--Creative Commons License-->This site is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).<!--/Creative Commons License-->"
   mobileMenu: true
