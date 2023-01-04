@@ -1,4 +1,4 @@
-{{ $re := (replaceRE "\\+" "\\\\+" $.File.BaseFileName) }} {{ $backlinks := slice }} {{ range .Site.AllPages }} {{ if and (findRE $re .RawContent) (not (eq
+{{ $re := ( printf "\\/%s" (replaceRE "\\+" "\\\\+" $.File.BaseFileName)) }} {{ $backlinks := slice }} {{ range .Site.AllPages }} {{ if and (findRE $re .RawContent) (not (eq
 $re .File.BaseFileName)) }} {{ $backlinks = $backlinks | append . }} {{ end }}
 {{ end }} {{ if gt (len $backlinks) 0 }}
 

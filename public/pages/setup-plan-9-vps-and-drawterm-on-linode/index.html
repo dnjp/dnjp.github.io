@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Setup Plan 9 VPS and Drawterm on Linode | Daniel Posthuma</title>
+<meta name="keywords" content="" />
+<meta name="description" content="Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:">
+<meta name="author" content="Daniel Posthuma">
+<link rel="canonical" href="https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.49b1c3611e5e823e974d0b9b3e1101617fce26c004757161abb1a1e4af3ff85c.css" integrity="sha256-SbHDYR5egj6XTQubPhEBYX/OJsAEdXFhq7Gh5K8/&#43;Fw=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.b95bacdc39e37a332a9f883b1e78be4abc1fdca2bc1f2641f55e3cd3dabd4d61.js" integrity="sha256-uVus3DnjejMqn4g7Hni&#43;Srwf3KK8HyZB9V4809q9TWE="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://dnjp.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dnjp.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dnjp.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://dnjp.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://dnjp.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<meta name="generator" content="Hugo 0.109.0">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Setup Plan 9 VPS and Drawterm on Linode" />
+<meta property="og:description" content="Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/" /><meta property="article:section" content="pages" />
+<meta property="article:published_time" content="2023-01-03T00:00:00&#43;00:00" />
+<meta property="article:modified_time" content="2023-01-03T00:00:00&#43;00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Setup Plan 9 VPS and Drawterm on Linode"/>
+<meta name="twitter:description" content="Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Pages",
+      "item": "https://dnjp.github.io/pages/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Setup Plan 9 VPS and Drawterm on Linode",
+      "item": "https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Setup Plan 9 VPS and Drawterm on Linode",
+  "name": "Setup Plan 9 VPS and Drawterm on Linode",
+  "description": "Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:",
+  "keywords": [
+    
+  ],
+  "articleBody": "Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:\n“At work, users tend to use their terminals like workstations, running interactive programs locally and reserving the CPU servers for data or compute intensive jobs such as compiling and computing chess endgames. At home or when connected over a slow network, users tend to do most work on the CPU server to minimize traffic on the slow links. The goal of the network organization is to provide the same environment to the user wherever resources are used.” The architecture of a Plan 9 system can range from running every component together on your local machine, to having each part distributed across a variety of machines in a much more elaborate configuration. As my first step in trying out some of these features, I’m going setup a basic Plan 9 configuration on a single VPS hosted in Linode. I am going to be doing this from my Macbook Air (M1, 2020) which brings along its own set of issues to contend with.\nCreating the VPS\nThe first step is to create a Linode account and navigate to the “Linodes” section on the left side panel and select “Create Linode”. Here are the settings I’d recommend for this initial test:\nImages: Alpine 3.14 (we’ll end up removing this image, so it doesn’t really matter which you select)\nRegion: Newark, NJ (pick whichever region is closest to you)\nLinode Plan: Shared CPU Nanode 1 GB ($5/month)\nLinode Label: 9front\nRoot Password: (we’re going to wipe away the Alpine image, so this doesn’t matter)\nAdd-ons: Private IP\nOnce these options are selected, click “Create Linode” on the right to spin up your VPS. Once it’s up, select your new machine and click “Power Off” towards the top because we’re about to create some new disks and setup configurations for installing and running Plan 9.\nWe will be creating 2 disks for this installation - one which will contain the contents of the Plan 9 ISO (we’ll be using 9front) and the other will be our primary disk we will be booting into after the installation.\nFirst, delete any disks that Linode created by clicking the “…” button followed by “Delete” next to each disk. Then, click “Add a Disk” and create the two disks in this order:\nInstaller:\nLabel: installer\nFilesystem: raw\nSize: 650 MB\nBoot:\nLabel: boot\nFilesystem: raw\nSize: 24950 MB (the remaining space left)\nNow we’ll create 2 configurations - one to boot the install media and the other we’ll use to boot Plan 9 after the install. Select “Configurations”, click “Add Configuration”, and create these 2 configurations:\nInstaller:\nLabel: installer\nVirtual Machine:\nVM Mode: Full virtualization Boot Settings:\nSelect a Kernel: Direct Disk\nRun Level: Run Default Level\nMemory Limit: Do not set any limits on memory usage\nBlock Device Assignment:\n/dev/sda: boot\n/dev/sdb: installer\n/dev/sdc: None\nRoot Device: /dev/sdb\nFilesystem/Boot Helpers: disable all enabled options\nBoot:\nLabel: boot\nVirtual Machine:\nVM Mode: Full virtualization Boot Settings:\nSelect a Kernel: Direct Disk\nRun Level: Run Default Level\nMemory Limit: Do not set any limits on memory usage\nBlock Device Assignment:\n/dev/sda: boot\n/dev/sdb: None\nRoot Device: /dev/sda\nFilesystem/Boot Helpers: disable all enabled options\nWith all of this configuration out of the way, now we will actually install Plan 9. Click the “…” icon for your machine and select “Rescue”. This will boot us into a mode where we can unpack the ISO and setup our “installer” disk. Once the machine has booted, click “Launch LISH Console” which will pull up a terminal in your web browser.\nWhile this is coming online, copy the link to the 9front release you want to install. In the Linode LISH console, run the following command to write the ISO to the “installer” disk:\nwget http://9front.org/iso/9front-8392.16c5ead832f2.amd64.iso.gz -q -O - | funzip | dd of=/dev/sda When this has completed, close the LISH Console window, and click the “Boot” button for the “installer” disk. Once the machine has finished restarting, click “Launch LISH Console” again and click the “Glish” tab in the window that opens. If all goes well, you should be in the Plan 9 terminal which will have default options for booting into the graphical environment. Hit Enter for each of these options to select the defaults. When rio launches, it will ask you to select the mouseport where you should enter “ps2intellimouse”. In the terminal window that will open, enter inst/start to begin the installation. At this point, you can follow the FQA to complete installing Plan 9 with a few exceptions.\nIn the partdist step, you will need to delete all of the partitions on /dev/sdC0 with d until the disk simply shows empty. Enter w and then q to write the change which will restart the partdist step with the empty partion selected. You can simply enter w and then q again to write the default Plan 9 partitions. During the mountdist step, be sure to select /dev/sdC1/data for the distribution disk.\nWhen the installation is completed and the installer restarts the machine, close out of the LISH console. Now, click “Boot” for the “boot” disk to boot up Plan 9 normally. We’ll again select the default options in the terminal which will then launch rio on your new Plan 9 VPS.\nSet up CPU Server\nObviously, interacting with Plan 9 through the LISH Console is not the most pleasant experience. We will be configuring Plan 9 to run as a standalone CPU server which we will connect to with Drawterm.\nThe first step is to modify the default boot settings for Plan 9:\n% 9fs 9fat % cd /n/9fat % cp plan9.ini plan9.ini.bak # keep a backup % sam plan9.ini This will open up the sam editor so we can edit the ini file. Right click in the bottom section of the editor and select “plan9.ini” and then right click again in the bottom section to open the file.\nRight click on the desktop, click “New”, and right click drag the size of the window you want to create. In that window, we will get some networking information that we will need to modify the plan9.ini file:\n% ip/ipconfig % cat /net/ndb Back in sam, add the following to the end of the plan9.ini file\nnobootprompt=local!/dev/sdC0/fs -m -A -a tcp!*!564 user=glenda auth= cpu= authdom= service=cpu Once these changes have been made, click on the top part of the editor and enter “w” and then “q” to save the file and quit sam. Now we will setup the auth server:\n% auth/wrkey # authid: glenda # authdom: # secstore key: # password: % auth/keyfs % auth/changeuser glenda # Password: # POP secret: doesn't matter # Expiration Date: never # Post id: glenda # User's full name: % auth/enable glenda Now we’ll configure the network database:\n% cd /lib/ndb % sam ./local Towards the end of the file there will be a line that starts with sys=somehost ether=…. Change this line to the following:\nsys= ether= authdom= auth= ip= Below the sys line, add the following settings:\nipnet= ip= ipmask= ipgw= auth= authdom= fs= cpu= dns= Save the file and quit sam. Now we will modify your users profile so that when we launch drawterm that we’ll have rio launch automatically:\n$ cd $home $ sam lib/profile Find the cpu case in the service switch statement. Directly under the fn cpu%… line, add a new line to start rio:\nfn cpu%{ $* } rio -i riostart -s Save the file, quit sam, and sync the disk:\n% echo sync \u003e\u003e /srv/hjfs.cmd % fshalt -r This will restart the machine, but make sure it returns to “Running” in Linode. Click “Launch LISH Console” and select the Glish tab after the machine restarts, accept the defaults in the terminal, and that should get you to a prompt starting with cirno#. We’re now ready to set up Drawterm. Drawterm\nTo get started, clone the drawterm git repo locally and change to its directory. Follow the README to install for your platform. For MacOS, this means:\n$ CONF=osx-cocoa make $ cp drawterm gui-cocoa/drawterm.app/ $ cp -r gui-cocoa/drawterm.app /Applications/ I’ve made some small changes to the MacOS app to boot my settings by default. You can check them out here. For Linux, once the build has completed, copy the drawterm binary to /usr/local/bin.\nNow, copy the IP address for your VPS in Linode and launch drawterm:\n$ drawterm -u glenda -a -h If all goes well, a graphical window should launch and prompt you to enter the password for the glenda user that you set earlier. Enter the password, and you should now have rio running through drawterm on your local machine. A quick note: your local file system is available in drawterm at /mnt/term which enables you to use Plan 9 to work with files on your Unix machine. ",
+  "wordCount" : "1605",
+  "inLanguage": "en",
+  "datePublished": "2023-01-03T00:00:00Z",
+  "dateModified": "2023-01-03T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Daniel Posthuma"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Daniel Posthuma",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dnjp.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dnjp.github.io" accesskey="h" title="Daniel Posthuma (Alt + H)">Daniel Posthuma</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dnjp.github.io/blog/" title="Blog">
+                    <span>Blog</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dnjp.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    
+    <h1 class="post-title">
+      Setup Plan 9 VPS and Drawterm on Linode
+    </h1>
+    <div class="post-meta"><span title='2023-01-03 00:00:00 +0000 UTC'>January 3, 2023</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;Daniel Posthuma
+
+</div>
+  </header> 
+  <div class="post-content"><p>Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. <a href="http://doc.cat-v.org/plan_9/4th_edition/papers/net/">The Organization of Networks in Plan 9</a> by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:</p>
+<ul>
+<li>“At work, users tend to use their terminals like workstations, running interactive programs locally and reserving the CPU servers for data or compute intensive jobs such as compiling and computing chess endgames. At home or when connected over a slow network, users tend to do most work on the CPU server to minimize traffic on the slow links. The goal of the network organization is to provide the same environment to the user wherever resources are used.”</li>
+</ul>
+<p>The architecture of a Plan 9 system can range from running every component together on your local machine, to having each part distributed across a variety of machines in a much more elaborate configuration. As my first step in trying out some of these features, I’m going setup a basic Plan 9 configuration on a single VPS hosted in <a href="https://www.linode.com/">Linode</a>. I am going to be doing this from my Macbook Air (M1, 2020) which brings along its own set of issues to contend with.</p>
+<p>Creating the VPS</p>
+<ul>
+<li>
+<p>The first step is to create a Linode account and navigate to the “Linodes” section on the left side panel and select “Create Linode”. Here are the settings I’d recommend for this initial test:</p>
+<ul>
+<li>
+<p>Images: Alpine 3.14 (we’ll end up removing this image, so it doesn’t really matter which you select)</p>
+</li>
+<li>
+<p>Region: Newark, NJ (pick whichever region is closest to you)</p>
+</li>
+<li>
+<p>Linode Plan: Shared CPU Nanode 1 GB ($5/month)</p>
+</li>
+<li>
+<p>Linode Label: 9front</p>
+</li>
+<li>
+<p>Root Password: (we’re going to wipe away the Alpine image, so this doesn’t matter)</p>
+</li>
+<li>
+<p>Add-ons: Private IP</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Once these options are selected, click “Create Linode” on the right to spin up your VPS. Once it’s up, select your new machine and click “Power Off” towards the top because we’re about to create some new disks and setup configurations for installing and running Plan 9.</p>
+</li>
+<li>
+<p>We will be creating 2 disks for this installation - one which will contain the contents of the Plan 9 ISO (we’ll be using 9front) and the other will be our primary disk we will be booting into after the installation.</p>
+</li>
+<li>
+<p>First, delete any disks that Linode created by clicking the “…” button followed by “Delete” next to each disk. Then, click “Add a Disk” and create the two disks in this order:</p>
+<ul>
+<li>
+<p>Installer:</p>
+<ul>
+<li>
+<p>Label: installer</p>
+</li>
+<li>
+<p>Filesystem: raw</p>
+</li>
+<li>
+<p>Size: 650 MB</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Boot:</p>
+<ul>
+<li>
+<p>Label: boot</p>
+</li>
+<li>
+<p>Filesystem: raw</p>
+</li>
+<li>
+<p>Size: 24950 MB (the remaining space left)</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Now we’ll create 2 configurations - one to boot the install media and the other we’ll use to boot Plan 9 after the install. Select “Configurations”, click “Add Configuration”, and create these 2 configurations:</p>
+<ul>
+<li>
+<p>Installer:</p>
+<ul>
+<li>
+<p>Label: installer</p>
+</li>
+<li>
+<p>Virtual Machine:</p>
+<ul>
+<li>VM Mode: Full virtualization</li>
+</ul>
+</li>
+<li>
+<p>Boot Settings:</p>
+<ul>
+<li>
+<p>Select a Kernel: Direct Disk</p>
+</li>
+<li>
+<p>Run Level: Run Default Level</p>
+</li>
+<li>
+<p>Memory Limit: Do not set any limits on memory usage</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Block Device Assignment:</p>
+<ul>
+<li>
+<p>/dev/sda: boot</p>
+</li>
+<li>
+<p>/dev/sdb: installer</p>
+</li>
+<li>
+<p>/dev/sdc: None</p>
+</li>
+<li>
+<p>Root Device: /dev/sdb</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Filesystem/Boot Helpers: disable all enabled options</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Boot:</p>
+<ul>
+<li>
+<p>Label: boot</p>
+</li>
+<li>
+<p>Virtual Machine:</p>
+<ul>
+<li>VM Mode: Full virtualization</li>
+</ul>
+</li>
+<li>
+<p>Boot Settings:</p>
+<ul>
+<li>
+<p>Select a Kernel: Direct Disk</p>
+</li>
+<li>
+<p>Run Level: Run Default Level</p>
+</li>
+<li>
+<p>Memory Limit: Do not set any limits on memory usage</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Block Device Assignment:</p>
+<ul>
+<li>
+<p>/dev/sda: boot</p>
+</li>
+<li>
+<p>/dev/sdb: None</p>
+</li>
+<li>
+<p>Root Device: /dev/sda</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Filesystem/Boot Helpers: disable all enabled options</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>With all of this configuration out of the way, now we will actually install Plan 9. Click the “…” icon for your machine and select “Rescue”. This will boot us into a mode where we can unpack the ISO and setup our “installer” disk. Once the machine has booted, click “Launch LISH Console” which will pull up a terminal in your web browser.</p>
+</li>
+<li>
+<p>While this is coming online, copy the link to the <a href="http://9front.org/iso/">9front release</a> you want to install. In the Linode LISH console, run the following command to write the ISO to the “installer” disk:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>wget http://9front.org/iso/9front-8392.16c5ead832f2.amd64.iso.gz -q -O - | funzip | dd of=/dev/sda
+</span></span></code></pre></div><ul>
+<li>
+<p>When this has completed, close the LISH Console window, and click the “Boot” button for the “installer” disk. Once the machine has finished restarting, click “Launch LISH Console” again and click the “Glish” tab in the window that opens. If all goes well, you should be in the Plan 9 terminal which will have default options for booting into the graphical environment. Hit Enter for each of these options to select the defaults. When <a href="http://man.cat-v.org/9front/1/rio">rio</a> launches, it will ask you to select the mouseport where you should enter “ps2intellimouse”. In the terminal window that will open, enter inst/start to begin the installation. At this point, you can follow the <a href="http://fqa.9front.org/fqa4.html#4.3">FQA</a> to complete installing Plan 9 with a few exceptions.</p>
+</li>
+<li>
+<p>In the partdist step, you will need to delete all of the partitions on /dev/sdC0 with d <!-- raw HTML omitted --> until the disk simply shows empty. Enter w and then q to write the change which will restart the partdist step with the empty partion selected. You can simply enter w and then q again to write the default Plan 9 partitions. During the mountdist step, be sure to select /dev/sdC1/data for the distribution disk.</p>
+</li>
+<li>
+<p>When the installation is completed and the installer restarts the machine, close out of the LISH console. Now, click “Boot” for the “boot” disk to boot up Plan 9 normally. We’ll again select the default options in the terminal which will then launch rio on your new Plan 9 VPS.</p>
+</li>
+</ul>
+<p>Set up CPU Server</p>
+<ul>
+<li>
+<p>Obviously, interacting with Plan 9 through the LISH Console is not the most pleasant experience. We will be configuring Plan 9 to run as a standalone CPU server which we will connect to with <a href="http://drawterm.9front.org/">Drawterm</a>.</p>
+</li>
+<li>
+<p>The first step is to modify the default boot settings for Plan 9:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>% 9fs 9fat
+</span></span><span style="display:flex;"><span>% cd /n/9fat
+</span></span><span style="display:flex;"><span>% cp plan9.ini plan9.ini.bak  # keep a backup
+</span></span><span style="display:flex;"><span>% sam plan9.ini
+</span></span></code></pre></div><ul>
+<li>
+<p>This will open up the <a href="http://man.cat-v.org/plan_9/1/sam">sam editor</a> so we can edit the ini file. Right click in the bottom section of the editor and select “plan9.ini” and then right click again in the bottom section to open the file.</p>
+</li>
+<li>
+<p>Right click on the desktop, click “New”, and right click drag the size of the window you want to create. In that window, we will get some networking information that we will need to modify the plan9.ini file:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>% ip/ipconfig
+</span></span><span style="display:flex;"><span>% cat /net/ndb
+</span></span></code></pre></div><ul>
+<li>
+<p>Back in sam, add the following to the end of the plan9.ini file</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>nobootprompt=local!/dev/sdC0/fs -m &lt;mem&gt; -A -a tcp!*!564
+</span></span><span style="display:flex;"><span>user=glenda
+</span></span><span style="display:flex;"><span>auth=&lt;your ip address&gt;
+</span></span><span style="display:flex;"><span>cpu=&lt;your ip address&gt;
+</span></span><span style="display:flex;"><span>authdom=&lt;choose name&gt;
+</span></span><span style="display:flex;"><span>service=cpu
+</span></span></code></pre></div><ul>
+<li>
+<p>Once these changes have been made, click on the top part of the editor and enter “w” and then “q” to save the file and quit sam. Now we will setup the auth server:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>% auth/wrkey
+</span></span><span style="display:flex;"><span># authid: glenda
+</span></span><span style="display:flex;"><span># authdom: &lt;same as plan9.ini&gt;
+</span></span><span style="display:flex;"><span># secstore key: &lt;enter password&gt;
+</span></span><span style="display:flex;"><span># password: &lt;enter same password&gt;
+</span></span><span style="display:flex;"><span>% auth/keyfs
+</span></span><span style="display:flex;"><span>% auth/changeuser glenda
+</span></span><span style="display:flex;"><span># Password: &lt;same as used above&gt;
+</span></span><span style="display:flex;"><span># POP secret: doesn&#39;t matter
+</span></span><span style="display:flex;"><span># Expiration Date: never
+</span></span><span style="display:flex;"><span># Post id: glenda
+</span></span><span style="display:flex;"><span># User&#39;s full name: &lt;whatever you want&gt;
+</span></span><span style="display:flex;"><span>% auth/enable glenda
+</span></span></code></pre></div><ul>
+<li>
+<p>Now we’ll configure the network database:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>% cd /lib/ndb
+</span></span><span style="display:flex;"><span>% sam ./local
+</span></span></code></pre></div><ul>
+<li>
+<p>Towards the end of the file there will be a line that starts with sys=somehost ether=&hellip;. Change this line to the following:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>sys=&lt;keep value&gt; ether=&lt;keep value&gt; authdom=&lt;same as plan9.ini&gt; auth=&lt;your ip address&gt; ip=&lt;your ip&gt;
+</span></span></code></pre></div><ul>
+<li>
+<p>Below the sys line, add the following settings:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>ipnet=&lt;give a name&gt; ip=&lt;your ip, replace last number with 0&gt; ipmask=&lt;same as /net/ndb&gt;
+</span></span><span style="display:flex;"><span>	ipgw=&lt;same as /net/ndb&gt;
+</span></span><span style="display:flex;"><span>	auth=&lt;your ip&gt;
+</span></span><span style="display:flex;"><span>	authdom=&lt;same as plan9.ini&gt;
+</span></span><span style="display:flex;"><span>	fs=&lt;your ip&gt;
+</span></span><span style="display:flex;"><span>	cpu=&lt;your ip&gt;
+</span></span><span style="display:flex;"><span>	dns=&lt;same as /net/ndb&gt;
+</span></span></code></pre></div><ul>
+<li>
+<p>Save the file and quit sam. Now we will modify your users profile so that when we launch drawterm that we’ll have rio launch automatically:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>$ cd $home
+</span></span><span style="display:flex;"><span>$ sam lib/profile
+</span></span></code></pre></div><ul>
+<li>
+<p>Find the cpu case in the service switch statement. Directly under the fn cpu%&hellip; line, add a new line to start rio:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>fn cpu%{ $* }
+</span></span><span style="display:flex;"><span>rio -i riostart -s
+</span></span></code></pre></div><ul>
+<li>
+<p>Save the file, quit sam, and sync the disk:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>% echo sync &gt;&gt; /srv/hjfs.cmd
+</span></span><span style="display:flex;"><span>% fshalt -r
+</span></span></code></pre></div><ul>
+<li>This will restart the machine, but make sure it returns to “Running” in Linode. Click “Launch LISH Console” and select the Glish tab after the machine restarts, accept the defaults in the terminal, and that should get you to a prompt starting with cirno#. We’re now ready to set up Drawterm.</li>
+</ul>
+<p>Drawterm</p>
+<ul>
+<li>
+<p>To get started, clone the <a href="http://git.9front.org/plan9front/drawterm/HEAD/info.html">drawterm git repo</a> locally and change to its directory. Follow the README to install for your platform. For MacOS, this means:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>$ CONF=osx-cocoa make
+</span></span><span style="display:flex;"><span>$ cp drawterm gui-cocoa/drawterm.app/
+</span></span><span style="display:flex;"><span>$ cp -r gui-cocoa/drawterm.app /Applications/
+</span></span></code></pre></div><ul>
+<li>
+<p>I’ve made some small changes to the MacOS app to boot my settings by default. You can check them out <a href="https://github.com/dnjp/cfg/tree/master/mac/drawterm.app">here</a>. For Linux, once the build has completed, copy the drawterm binary to /usr/local/bin.</p>
+</li>
+<li>
+<p>Now, copy the IP address for your VPS in Linode and launch drawterm:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>$ drawterm -u glenda -a &lt;VPS IP&gt; -h &lt;VPS IP&gt;
+</span></span></code></pre></div><ul>
+<li>If all goes well, a graphical window should launch and prompt you to enter the password for the glenda user that you set earlier. Enter the password, and you should now have rio running through drawterm on your local machine. A quick note: your local file system is available in drawterm at /mnt/term which enables you to use Plan 9 to work with files on your Unix machine.</li>
+</ul>
+
+
+  </div>
+     
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+<aside>
+  <h4>No notes link to this note</h4>
+</aside>
+
+
+<aside class="related">
+  </aside>
+
+  <footer class="post-footer">
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2023 <a href="https://dnjp.github.io">Daniel Posthuma</a></span>
+    <br>
+    <span>
+        Powered by
+        
+        
+       <a href="https://github.com/sawhney17/logseq-schrodinger" rel="noopener" target="_blank">Logseq Schrödinger</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

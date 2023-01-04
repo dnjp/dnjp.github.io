@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Plan9 on Qemu | Daniel Posthuma</title>
+<meta name="keywords" content="Plan 9" />
+<meta name="description" content="This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.
+In the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM.">
+<meta name="author" content="Daniel Posthuma">
+<link rel="canonical" href="https://dnjp.github.io/pages/plan9-on-qemu/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.49b1c3611e5e823e974d0b9b3e1101617fce26c004757161abb1a1e4af3ff85c.css" integrity="sha256-SbHDYR5egj6XTQubPhEBYX/OJsAEdXFhq7Gh5K8/&#43;Fw=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.b95bacdc39e37a332a9f883b1e78be4abc1fdca2bc1f2641f55e3cd3dabd4d61.js" integrity="sha256-uVus3DnjejMqn4g7Hni&#43;Srwf3KK8HyZB9V4809q9TWE="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://dnjp.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dnjp.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dnjp.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://dnjp.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://dnjp.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<meta name="generator" content="Hugo 0.109.0">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Plan9 on Qemu" />
+<meta property="og:description" content="This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.
+In the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dnjp.github.io/pages/plan9-on-qemu/" /><meta property="article:section" content="pages" />
+<meta property="article:published_time" content="2023-01-03T00:00:00&#43;00:00" />
+<meta property="article:modified_time" content="2023-01-03T00:00:00&#43;00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Plan9 on Qemu"/>
+<meta name="twitter:description" content="This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.
+In the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Pages",
+      "item": "https://dnjp.github.io/pages/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Plan9 on Qemu",
+      "item": "https://dnjp.github.io/pages/plan9-on-qemu/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Plan9 on Qemu",
+  "name": "Plan9 on Qemu",
+  "description": "This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.\nIn the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM.",
+  "keywords": [
+    "Plan 9"
+  ],
+  "articleBody": "This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.\nIn the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM.\nInstallation\nThe run script script can setup 9front, 9front-ANTS, or the 9legacy distribution. Execute the install script and answer the prompts to install your selected distibution:\n$: ./run.sh Stick with the default options up until Plan 9 boots up. When asked what input device you would like to use, enter ps2intellimouse. You are now ready to install Plan 9. To do so, follow the install guide from the 9front FQA.\nWhen the installation is complete and you are kicked back out to the tty, shutdown the Qemu machine. Now you can simply execute the run script and select “run” to boot up your selected image.\nSetting Resolution\nObtain a list of vesa bios modes\n%: @{rfork n; aux/realemu; aux/vga -p} Configure one of the valid modes\n%: @{rfork n; aux/realemu; aux/vga -m vesa -l 1024x768x16} You will likely want to persist this setting so that it is the same when you reboot the VM. To do that, modify the vgasize option in the plan9.ini file.\nModifying plan9.ini\nBind the local hard drive kernel device over /dev\n%: bind -b '#S' /dev Specify the full path to the corresponding 9fat\n%: 9fs 9fat /dev//9fat Edit the file /n/9fat/plan9.ini to configure your desired boot settings. If the above does not work on your system, give this script a try.\nCreate your own user\n“glenda” is the default user on Plan 9. However, you will likely want to create a user for yourself. To do so, we will first connect to the Fossil file server console and create the new user:\n%: con -l /srv/fscons Once connected, your prompt will change to simply “prompt: “. First, create your user:\nprompt: uname Then you can add your user to the groups that make sense. To give your user system privileges, add yourself to the sys group:\nprompt: uname +sys\nprompt: uname sys +\nIf you want access to /adm then add your user to the adm group:\nprompt: uname adm + Type CTL+\\ and then type q at the prompt\nNow that the file system knows about our new user, we need to configure and enable the new user. First we’ll start keyfs so we can change authentication information:\n%: auth/keyfs Then we will configure the user:\n%: auth/changeuser All that’s left is to enable the user:\n%: auth/enable If the above fails, make sure that the auth/cpu kernel is running in your plan9.ini. To be sure, set server=cpu in the plan9.ini.\nSetup Timezone\nThe available timezones are simply files in /adm/timezone. To select a timezone, copy your selection to /adm/timezone/local:\n%: cp /adm/timezone/ /adm/timezone/local Then open up /rc/bin/termrc in sam or acme and change the TIMESYNCARGS:\nTIMESYNCARGS=(-n pool.ntp.org) Then restart your system with fshalt -r.\nSetup keyboard\nIf you use a fairly standard layout, you’re desired settings can most easily be changed with kbmap:\n%: kbmap Right click your desired setting and then type “q” to quit. If you’re using a layout like Colemak (yours truly), then you can add the layout I have here to kbmap:\n%: hget \\ https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak \\ \u003e /sys/lib/kbmap/colemak Then just run kbmap as above and select “colemak”. To persist these settings add something like the following to your $home/lib/profile directly above rio in the terminal case statement:\ncat /sys/lib/kbmap/colemak \u003e /dev/kbmap Configure Rio\nOpen up your $home/lib/profile with either sam or acme\n%: sam $home/lib/profile If you’re using sam, you will right click on the blue bar at the top and select the file you want to edit and then right click on the pale yellow buffer below it to bring that file into focus.\nFind the line that starts the rio window manager and add the -s option. The original will look something like this:\nrio -i riostart To make rio autoscroll, add the -s option. If you’d prefer a black background, you can add the -b option. With both applied, the new command should look like this:\nrio -b -s -i riostart If $home/bin/rc/riostart does not exist, create a mostly empty script that looks like this for now:\n#!/bin/rc Then make it executable with chmod +x $home/bin/rc/riostart. To automatically start DHCP when rio starts, add this line above the switch statement:\nip/ipconfig You might want to change the default font as well. The best way to do that is to play around with the system fonts in acme. First, launch acme:\n%: acme To get a feel for how to use acme, I’d recommend watching the intro by Russ Cox. Once familiar with how to use acme, open the directory /lib/font/bit/ and try changing the font by executing something like the following in an acme buffer:\nFont /lib/font/bit/terminus/unicode.14.font Once you’ve found one you’ve liked, update your font selection in $home/lib/profile. When you are finished editing your profile, click on the blue bar to bring it into focus and enter w to write the file followed by q to quit, like this:\nw q When rio starts up you will see it has two windows open - one in the upper left showing system stats and a terminal window. The terminal window is a bit small for my taste, so let’s make it bigger.\nOpen up $home/bin/rc/riostart with sam:\n%: sam $home/bin/rc/riostart Open up the the file in your editors buffer. You will see that there are two lines starting with window. The first sets the location and size for the stats window. The second is the location and size of our initial terminal window. This is the line we want to edit.\nReplace the contents of the second window line with the following:\nwindow 200,200,850,600 Save and exit sam as you did before. Reboot the VM with the fshalt command:\n%: fshalt -r Ports\nThere are ports of some unix tools and other applications that run on Plan 9 in the 9front ports. All you have to do is clone the ports tree into your system:\n% hg clone http://code.9front.org/hg/ports /sys/ports Then to install a port, for example media-fonts, you would do this:\n%: cd /sys/ports/media-fonts %: mk nuke %: mk build %: mkdir /lib/font/ttf %: mk install Setup Git\ngit9 is a git implementation for Plan 9 by Ori Bernstein (oridb) that works quite well on Plan 9. There are two ways to install git9 - using 9front Ports or via git for the most up to date changes.\nUsing 9front Ports, the installation is very straight forward:\n%: cd /sys/ports/dev-vcs/git9 %: mk install For the git install, we’ll first get a bootstrap version which will give us the git command and then we will setup the git9 repository in a place that you can easily update it in the future.\nGet the bootstrap version:\n%: cd /tmp %: hget https://github.com/oridb/git9/archive/master.tar.gz | tar xvz %: cd git9-master %: mk all %: mk install Now we’ll get the version from git which you can easily update:\n%: cd $home/src %: git/clone https://github.com/oridb/git9 %: cd git9 %: mk all %: mk install At this point, you should have a quick read of the man page for git and gitfs that come with git9:\n%: man 1 git %: man 4 gitfs Once you’re familiarized with how git on Plan 9 works, let’s get your git config setup:\n%: mkdir -p $home/lib/git %: touch $home/lib/git/config %: sam $home/lib/git/config Add the following contents using your own information using tabs for indentation:\n[user] name = Your Name email = yourname@address.com The last part of this process is to setup your ssh keys with your git provider. First we’ll generate the public and private keys:\n%: mkdir $home/lib/ssh %: auth/rsagen -t 'service=ssh' \u003e $home/lib/ssh/key %: auth/rsa2ssh $home/lib/ssh/key \u003e $home/lib/ssh/key.pub Now that the keys exist, we need to add them to factotum so that you can authenticate using those keys:\n%: cat $home/lib/ssh/key \u003e/mnt/factotum/ctl %: ssh git@github.com %: ssh git@git.sr.ht You should get a success message saying that you have authenticated to Github in this case. You may also get an error message saying that Github does not provide shell access which is to be expected.\nAssuming that was successful, add both of those commands to $home/lib/profile so that you will be automatically authenticated. The man pages for git9 should give you most of the information that you need. The only other thing you may need to know is how to push to a repository using git+ssh instead of https. You can do that with a command like this:\n%: git/push -u git+ssh://git@github.com/youruser/yourrepo For Sourcehut, you’ll need to use ssh/git+ssh for read/write:\n%: git/clone ssh://git@git.sr.ht/~youruser/yourrepo %: git/clone git+ssh://git@git.sr.ht:~youruser/yourrepo An example configuration might look like this:\n[remote \"origin\"] url = git+ssh://git@git.sr.ht:~youruser/yourrepo fetch = +refs/heads/*:refs/remotes/origin/* Install Go\nYou will probably want to write programs in a language other than C while you’re working on Plan 9. Go is a popular option and many programs for Plan 9 are written in Go.\nTo install Go we will have to bootstrap the installation with an earlier version of Go already compiled for Plan 9. The process consists of obtaining the bootstap version and the target version, and telling the target version to use the bootstrapped version in order to build the toolchain.\nTo get started we will first make the directory to temporarily house the installation:\n%: ramfs %: cd /tmp Then we’ll download both the bootstrap and target versions of Go:\n%: hget http://www.9legacy.org/download/go/go1.14.1-plan9-amd64-bootstrap.tbz | bunzip2 -c | tar x %: hget https://golang.org/dl/go1.14.7.src.tar.gz | gunzip -c | tar x Now we’ll make the directory which will contain our target installation and bind the version we downloaded to that target directory:\n%: mkdir -p /sys/lib/go/amd64-1.14.7 # bind downloaded go source to system go source %: bind -c go /sys/lib/go/amd64-1.14.7 In order to ensure that the GOROOT is set correctly, we will change to the target directory when building Go and tell it where to locate our bootstrap installation:\n%: cd /sys/lib/go/amd64-1.14.7/src %: GOROOT_BOOTSTRAP=/tmp/go-plan9-amd64-bootstrap Next, configure loopback addresses so that the standard library tests will pass:\n%: ip/ipconfig -P loopback /dev/null 127.1 %: ip/ipconfig -P loopback /dev/null ::1 Now that we have everything in place, it’s time to start the install. Now’s the time to go get some lunch or do something else because it will take quite a while:\n%: ./make.rc If the install was successful, we can now persist the installation and do some cleanup:\n%: unmount /sys/lib/go/amd64-1.14.7 %: dircp /tmp/go /sys/lib/go/amd64-1.14.7 %: cp /sys/lib/go/amd64-1.14.7/bin/* /amd64/bin %: unmount /tmp Next you will want to add a line like the following to your profile so that you can run executables in your GOPATH.\nbind -a $home/go/bin /bin This is the equivalent of export PATH=$PATH:/some/path on Unix. You will also want to turn on the Go modules flag in your $home/lib/profile:\nGO111MODULE=on Now you’ll need to get a ca cert for building most go modules:\n%: hget https://curl.haxx.se/ca/cacert.pem \u003e/sys/lib/tls/ca.pem Next Steps\nI will continue to keep this post updated with relevant information to make sure it’s always up to date. If there is anything that you feel is missing, feel free to file an issue in Github. You may want to take a look at the Plan 9 Wiki which contains useful articles and links which should help you get more familiar with Plan 9. ",
+  "wordCount" : "1938",
+  "inLanguage": "en",
+  "datePublished": "2023-01-03T00:00:00Z",
+  "dateModified": "2023-01-03T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Daniel Posthuma"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dnjp.github.io/pages/plan9-on-qemu/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Daniel Posthuma",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dnjp.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dnjp.github.io" accesskey="h" title="Daniel Posthuma (Alt + H)">Daniel Posthuma</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dnjp.github.io/blog/" title="Blog">
+                    <span>Blog</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dnjp.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    
+    <h1 class="post-title">
+      Plan9 on Qemu
+    </h1>
+    <div class="post-meta"><span title='2023-01-03 00:00:00 +0000 UTC'>January 3, 2023</span>&nbsp;·&nbsp;10 min&nbsp;·&nbsp;Daniel Posthuma
+
+</div>
+  </header> 
+  <div class="post-content"><p>This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone <a href="https://github.com/dnjp/plan9-on-qemu">the repo</a> containing useful scripts to help you get started.</p>
+<p>In the shell examples below, any snippet starting with <code>$: </code> means that it should be executed on your Linux machine. Any snippet starting with <code>%: </code> should be executed in the Plan 9 VM.</p>
+<p><strong>Installation</strong></p>
+<ul>
+<li>
+<p>The <a href="https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh">run script</a> script can setup <a href="http://9front.org/">9front</a>, <a href="http://ants.9gridchan.org/">9front-ANTS</a>, or the <a href="http://9legacy.org/">9legacy</a> distribution. Execute the install script and answer the prompts to install your selected distibution:</p>
+<ul>
+<li><code>$: ./run.sh</code></li>
+</ul>
+</li>
+<li>
+<p>Stick with the default options up until Plan 9 boots up. When asked what input device you would like to use, enter <code>ps2intellimouse</code>. You are now ready to install Plan 9. To do so, follow the install guide from the <a href="http://fqa.9front.org/fqa4.html#4.1">9front FQA</a>.</p>
+</li>
+<li>
+<p>When the installation is complete and you are kicked back out to the tty, shutdown the Qemu machine. Now you can simply execute the <a href="https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh">run script</a> and select &ldquo;run&rdquo; to boot up your selected image.</p>
+</li>
+</ul>
+<p><strong>Setting Resolution</strong></p>
+<ul>
+<li>
+<p>Obtain a list of vesa bios modes</p>
+<ul>
+<li><code>%: @{rfork n; aux/realemu; aux/vga -p}</code></li>
+</ul>
+</li>
+<li>
+<p>Configure one of the valid modes</p>
+<ul>
+<li><code>%: @{rfork n; aux/realemu; aux/vga -m vesa -l 1024x768x16}</code></li>
+</ul>
+</li>
+<li>
+<p>You will likely want to persist this setting so that it is the same when you reboot the VM. To do that, modify the <code>vgasize</code> option in the <code>plan9.ini</code> file.</p>
+</li>
+</ul>
+<p><strong>Modifying plan9.ini</strong></p>
+<ul>
+<li>
+<p>Bind the local hard drive kernel device over /dev</p>
+<ul>
+<li><code>%: bind -b '#S' /dev</code></li>
+</ul>
+</li>
+<li>
+<p>Specify the full path to the corresponding 9fat</p>
+<ul>
+<li><code>%: 9fs 9fat /dev/&lt;your hd&gt;/9fat</code></li>
+</ul>
+</li>
+<li>
+<p>Edit the file <code>/n/9fat/plan9.ini</code> to configure your desired boot settings. If the above does not work on your system, give <a href="https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/9fat">this script</a> a try.</p>
+</li>
+</ul>
+<p><strong>Create your own user</strong></p>
+<ul>
+<li>
+<p>&ldquo;glenda&rdquo; is the default user on Plan 9. However, you will likely want to create a user for yourself. To do so, we will first connect to the Fossil file server console and create the new user:</p>
+<ul>
+<li><code>%: con -l /srv/fscons</code></li>
+</ul>
+</li>
+<li>
+<p>Once connected, your prompt will change to simply &ldquo;prompt: &ldquo;. First, create your user:</p>
+<ul>
+<li><code>prompt: uname &lt;username&gt; &lt;username&gt;</code></li>
+</ul>
+</li>
+<li>
+<p>Then you can add your user to the groups that make sense. To give your user system privileges, add yourself to the <code>sys</code> group:</p>
+<ul>
+<li>
+<p><code>prompt: uname &lt;username&gt; +sys</code></p>
+</li>
+<li>
+<p><code>prompt: uname sys +&lt;username&gt;</code></p>
+</li>
+</ul>
+</li>
+<li>
+<p>If you want access to <code>/adm</code> then add your user to the adm group:</p>
+<ul>
+<li><code>prompt: uname adm +&lt;username&gt;</code></li>
+</ul>
+</li>
+<li>
+<p>Type <code>CTL+\</code> and then type <code>q</code> at the prompt</p>
+</li>
+<li>
+<p>Now that the file system knows about our new user, we need to configure and enable the new user. First we&rsquo;ll start keyfs so we can change authentication information:</p>
+<ul>
+<li><code>%: auth/keyfs</code></li>
+</ul>
+</li>
+<li>
+<p>Then we will configure the user:</p>
+<ul>
+<li><code>%: auth/changeuser &lt;username&gt;</code></li>
+</ul>
+</li>
+<li>
+<p>All that&rsquo;s left is to enable the user:</p>
+<ul>
+<li><code>%: auth/enable &lt;username&gt;</code></li>
+</ul>
+</li>
+<li>
+<p>If the above fails, make sure that the auth/cpu kernel is running in your plan9.ini. To be sure, set <code>server=cpu</code> in the plan9.ini.</p>
+</li>
+</ul>
+<p><strong>Setup Timezone</strong></p>
+<ul>
+<li>
+<p>The available timezones are simply files in <code>/adm/timezone</code>. To select a timezone, copy your selection to <code>/adm/timezone/local</code>:</p>
+<ul>
+<li><code>%: cp /adm/timezone/&lt;your selection&gt; /adm/timezone/local</code></li>
+</ul>
+</li>
+<li>
+<p>Then open up <code>/rc/bin/termrc</code> in sam or acme and change the TIMESYNCARGS:</p>
+<ul>
+<li><code>TIMESYNCARGS=(-n pool.ntp.org)</code></li>
+</ul>
+</li>
+<li>
+<p>Then restart your system with <code>fshalt -r</code>.</p>
+</li>
+</ul>
+<p><strong>Setup keyboard</strong></p>
+<ul>
+<li>
+<p>If you use a fairly standard layout, you&rsquo;re desired settings can most easily be changed with kbmap:</p>
+<ul>
+<li><code>%: kbmap</code></li>
+</ul>
+</li>
+<li>
+<p>Right click your desired setting and then type &ldquo;q&rdquo; to quit. If you&rsquo;re using a layout like <a href="https://colemak.com/">Colemak</a> (yours truly), then you can add the layout I have <a href="https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak">here</a> to kbmap:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>%: hget <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	&gt; /sys/lib/kbmap/colemak
+</span></span></code></pre></div><ul>
+<li>
+<p>Then just run <code>kbmap</code> as above and select &ldquo;colemak&rdquo;. To persist these settings add something like the following to your <code>$home/lib/profile</code> directly above <code>rio</code> in the <code>terminal</code> case statement:</p>
+<ul>
+<li><code>cat /sys/lib/kbmap/colemak &gt; /dev/kbmap</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>Configure Rio</strong></p>
+<ul>
+<li>
+<p>Open up your <code>$home/lib/profile</code> with either <code>sam</code> or <code>acme</code></p>
+<ul>
+<li><code>%: sam $home/lib/profile</code></li>
+</ul>
+</li>
+<li>
+<p>If you&rsquo;re using sam, you will right click on the blue bar at the top and select the file you want to edit and then right click on the pale yellow buffer below it to bring that file into focus.</p>
+</li>
+<li>
+<p>Find the line that starts the rio window manager and add the <code>-s</code> option. The original will look something like this:</p>
+<ul>
+<li><code>rio -i riostart</code></li>
+</ul>
+</li>
+<li>
+<p>To make rio autoscroll, add the <code>-s</code> option. If you&rsquo;d prefer a black background, you can add the <code>-b</code> option. With both applied, the new command should look like this:</p>
+<ul>
+<li><code>rio -b -s -i riostart</code></li>
+</ul>
+</li>
+<li>
+<p>If <code>$home/bin/rc/riostart</code> does not exist, create a mostly empty script that looks like this for now:</p>
+<ul>
+<li><code>#!/bin/rc</code></li>
+</ul>
+</li>
+<li>
+<p>Then make it executable with <code>chmod +x $home/bin/rc/riostart</code>. To automatically start DHCP when rio starts, add this line above the <code>switch</code> statement:</p>
+<ul>
+<li><code>ip/ipconfig</code></li>
+</ul>
+</li>
+<li>
+<p>You might want to change the default font as well. The best way to do that is to play around with the system fonts in acme. First, launch acme:</p>
+<ul>
+<li><code>%: acme</code></li>
+</ul>
+</li>
+<li>
+<p>To get a feel for how to use acme, I&rsquo;d recommend watching the intro by <a href="https://www.youtube.com/watch?v=dP1xVpMPn8M">Russ Cox</a>. Once familiar with how to use acme, open the directory <code>/lib/font/bit/</code> and try changing the font by executing something like the following in an acme buffer:</p>
+<ul>
+<li><code>Font /lib/font/bit/terminus/unicode.14.font</code></li>
+</ul>
+</li>
+<li>
+<p>Once you&rsquo;ve found one you&rsquo;ve liked, update your font selection in <code>$home/lib/profile</code>. When you are finished editing your <code>profile</code>, click on the blue bar to bring it into focus and enter <code>w</code> to write the file followed by <code>q</code> to quit, like this:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>w
+</span></span><span style="display:flex;"><span>q
+</span></span></code></pre></div><ul>
+<li>
+<p>When rio starts up you will see it has two windows open - one in the upper left showing system stats and a terminal window. The terminal window is a bit small for my taste, so let&rsquo;s make it bigger.</p>
+</li>
+<li>
+<p>Open up <code>$home/bin/rc/riostart</code> with sam:</p>
+<ul>
+<li><code>%: sam $home/bin/rc/riostart</code></li>
+</ul>
+</li>
+<li>
+<p>Open up the the file in your editors buffer. You will see that there are two lines starting with <code>window</code>. The first sets the location and size for the stats window. The second is the location and size of our initial terminal window. This is the line we want to edit.</p>
+</li>
+<li>
+<p>Replace the contents of the second <code>window</code> line with the following:</p>
+<ul>
+<li><code>window 200,200,850,600</code></li>
+</ul>
+</li>
+<li>
+<p>Save and exit sam as you did before. Reboot the VM with the <code>fshalt</code> command:</p>
+<ul>
+<li><code>%: fshalt -r</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>Ports</strong></p>
+<ul>
+<li>
+<p>There are ports of some unix tools and other applications that run on Plan 9 in the 9front ports. All you have to do is clone the ports tree into your system:</p>
+<ul>
+<li><code>% hg clone http://code.9front.org/hg/ports /sys/ports</code></li>
+</ul>
+</li>
+<li>
+<p>Then to install a port, for example <code>media-fonts</code>, you would do this:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: cd /sys/ports/media-fonts
+</span></span><span style="display:flex;"><span>%: mk nuke
+</span></span><span style="display:flex;"><span>%: mk build
+</span></span><span style="display:flex;"><span>%: mkdir /lib/font/ttf
+</span></span><span style="display:flex;"><span>%: mk install
+</span></span></code></pre></div><p><strong>Setup Git</strong></p>
+<ul>
+<li>
+<p><a href="https://github.com/oridb/git9">git9</a> is a git implementation for Plan 9 by Ori Bernstein (<a href="https://github.com/oridb">oridb</a>) that works quite well on Plan 9. There are two ways to install git9 - using 9front Ports or via git for the most up to date changes.</p>
+</li>
+<li>
+<p>Using 9front Ports, the installation is very straight forward:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: cd /sys/ports/dev-vcs/git9
+</span></span><span style="display:flex;"><span>%: mk install
+</span></span></code></pre></div><ul>
+<li>
+<p>For the git install, we&rsquo;ll first get a bootstrap version which will give us the <code>git</code> command and then we will setup the git9 repository in a place that you can easily update it in the future.</p>
+</li>
+<li>
+<p>Get the bootstrap version:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#f92672">%:</span> <span style="color:#a6e22e">cd</span> <span style="color:#f92672">/</span><span style="color:#a6e22e">tmp</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">%:</span> <span style="color:#a6e22e">hget</span> <span style="color:#a6e22e">https</span><span style="color:#f92672">:</span><span style="color:#75715e">//github.com/oridb/git9/archive/master.tar.gz | tar xvz
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">%:</span> <span style="color:#a6e22e">cd</span> <span style="color:#a6e22e">git9</span><span style="color:#f92672">-</span><span style="color:#a6e22e">master</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">%:</span> <span style="color:#a6e22e">mk</span> <span style="color:#a6e22e">all</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">%:</span> <span style="color:#a6e22e">mk</span> <span style="color:#a6e22e">install</span>
+</span></span></code></pre></div><ul>
+<li>
+<p>Now we&rsquo;ll get the version from git which you can easily update:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: cd $home/src
+</span></span><span style="display:flex;"><span>%: git/clone https://github.com/oridb/git9
+</span></span><span style="display:flex;"><span>%: cd git9
+</span></span><span style="display:flex;"><span>%: mk all
+</span></span><span style="display:flex;"><span>%: mk install
+</span></span></code></pre></div><ul>
+<li>
+<p>At this point, you should have a quick read of the man page for git and gitfs that come with git9:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: man 1 git
+</span></span><span style="display:flex;"><span>%: man 4 gitfs
+</span></span></code></pre></div><ul>
+<li>
+<p>Once you&rsquo;re familiarized with how git on Plan 9 works, let&rsquo;s get your git config setup:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: mkdir -p $home/lib/git
+</span></span><span style="display:flex;"><span>%: touch $home/lib/git/config
+</span></span><span style="display:flex;"><span>%: sam $home/lib/git/config
+</span></span></code></pre></div><ul>
+<li>
+<p>Add the following contents using your own information using tabs for indentation:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>[user]
+</span></span><span style="display:flex;"><span>	name = Your Name
+</span></span><span style="display:flex;"><span>    email = yourname@address.com
+</span></span></code></pre></div><ul>
+<li>
+<p>The last part of this process is to setup your ssh keys with your git provider. First we&rsquo;ll generate the public and private keys:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: mkdir $home/lib/ssh
+</span></span><span style="display:flex;"><span>%: auth/rsagen -t &#39;service=ssh&#39; &gt; $home/lib/ssh/key
+</span></span><span style="display:flex;"><span>%: auth/rsa2ssh $home/lib/ssh/key &gt; $home/lib/ssh/key.pub
+</span></span></code></pre></div><ul>
+<li>
+<p>Now that the keys exist, we need to add them to <code>factotum</code> so that you can authenticate using those keys:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: cat $home/lib/ssh/key &gt;/mnt/factotum/ctl
+</span></span><span style="display:flex;"><span>%: ssh git@github.com
+</span></span><span style="display:flex;"><span>%: ssh git@git.sr.ht
+</span></span></code></pre></div><ul>
+<li>
+<p>You should get a success message saying that you have authenticated to Github in this case. You may also get an error message saying that Github does not provide shell access which is to be expected.</p>
+</li>
+<li>
+<p>Assuming that was successful, add both of those commands to <code>$home/lib/profile</code> so that you will be automatically authenticated. The man pages for git9 should give you most of the information that you need. The only other thing you may need to know is how to push to a repository using git+ssh instead of https. You can do that with a command like this:</p>
+<ul>
+<li><code>%: git/push -u git+ssh://git@github.com/youruser/yourrepo</code></li>
+</ul>
+</li>
+<li>
+<p>For <a href="https://sourcehut.org/">Sourcehut</a>, you&rsquo;ll need to use ssh/git+ssh for read/write:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: git/clone ssh://git@git.sr.ht/~youruser/yourrepo
+</span></span><span style="display:flex;"><span>%: git/clone git+ssh://git@git.sr.ht:~youruser/yourrepo
+</span></span></code></pre></div><ul>
+<li>
+<p>An example configuration might look like this:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>[remote &#34;origin&#34;]
+</span></span><span style="display:flex;"><span>	url = git+ssh://git@git.sr.ht:~youruser/yourrepo
+</span></span><span style="display:flex;"><span>    fetch = +refs/heads/*:refs/remotes/origin/*
+</span></span></code></pre></div><p><strong>Install Go</strong></p>
+<ul>
+<li>
+<p>You will probably want to write programs in a language other than C while you&rsquo;re working on Plan 9. Go is a popular option and many programs for Plan 9 are written in Go.</p>
+</li>
+<li>
+<p>To install Go we will have to bootstrap the installation with an earlier version of Go already compiled for Plan 9. The process consists of obtaining the bootstap version and the target version, and telling the target version to use the bootstrapped version in order to build the toolchain.</p>
+</li>
+<li>
+<p>To get started we will first make the directory to temporarily house the installation:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: ramfs
+</span></span><span style="display:flex;"><span>%: cd /tmp
+</span></span></code></pre></div><ul>
+<li>
+<p>Then we&rsquo;ll download both the bootstrap and target versions of Go:</p>
+</li>
+<li></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: hget
+</span></span><span style="display:flex;"><span>http://www.9legacy.org/download/go/go1.14.1-plan9-amd64-bootstrap.tbz | bunzip2
+</span></span><span style="display:flex;"><span>-c | tar x
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>%: hget https://golang.org/dl/go1.14.7.src.tar.gz | gunzip -c | tar x
+</span></span></code></pre></div><ul>
+<li>
+<p>Now we&rsquo;ll make the directory which will contain our target installation and bind the version we downloaded to that target directory:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: mkdir -p /sys/lib/go/amd64-1.14.7
+</span></span><span style="display:flex;"><span># bind downloaded go source to system go source
+</span></span><span style="display:flex;"><span>%: bind -c go /sys/lib/go/amd64-1.14.7
+</span></span></code></pre></div><ul>
+<li>
+<p>In order to ensure that the GOROOT is set correctly, we will change to the target directory when building Go and tell it where to locate our bootstrap installation:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: cd /sys/lib/go/amd64-1.14.7/src
+</span></span><span style="display:flex;"><span>%: GOROOT_BOOTSTRAP=/tmp/go-plan9-amd64-bootstrap
+</span></span></code></pre></div><ul>
+<li>
+<p>Next, configure loopback addresses so that the standard library tests will pass:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: ip/ipconfig -P loopback /dev/null 127.1
+</span></span><span style="display:flex;"><span>%: ip/ipconfig -P loopback /dev/null ::1
+</span></span></code></pre></div><ul>
+<li>
+<p>Now that we have everything in place, it&rsquo;s time to start the install. Now&rsquo;s the time to go get some lunch or do something else because it will take quite a while:</p>
+<ul>
+<li><code>%: ./make.rc</code></li>
+</ul>
+</li>
+<li>
+<p>If the install was successful, we can now persist the installation and do some cleanup:</p>
+<ul>
+<li></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plain" data-lang="plain"><span style="display:flex;"><span>%: unmount /sys/lib/go/amd64-1.14.7
+</span></span><span style="display:flex;"><span>%: dircp /tmp/go /sys/lib/go/amd64-1.14.7
+</span></span><span style="display:flex;"><span>%: cp /sys/lib/go/amd64-1.14.7/bin/* /amd64/bin
+</span></span><span style="display:flex;"><span>%: unmount /tmp
+</span></span></code></pre></div><ul>
+<li>
+<p>Next you will want to add a line like the following to your <code>profile</code> so that you can run executables in your GOPATH.</p>
+<ul>
+<li><code>bind -a $home/go/bin /bin</code></li>
+</ul>
+</li>
+<li>
+<p>This is the equivalent of <code>export PATH=$PATH:/some/path</code> on Unix. You will also want to turn on the Go modules flag in your <code>$home/lib/profile</code>:</p>
+<ul>
+<li><code>GO111MODULE=on</code></li>
+</ul>
+</li>
+<li>
+<p>Now you&rsquo;ll need to get a ca cert for building most go modules:</p>
+<ul>
+<li><code>%: hget https://curl.haxx.se/ca/cacert.pem &gt;/sys/lib/tls/ca.pem</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>Next Steps</strong></p>
+<ul>
+<li>I will continue to keep this post updated with relevant information to make sure it&rsquo;s always up to date. If there is anything that you feel is missing, feel free to file an issue in Github. You may want to take a look at the <a href="https://9p.io/wiki/plan9/plan_9_wiki/">Plan 9 Wiki</a> which contains useful articles and links which should help you get more familiar with Plan 9.</li>
+</ul>
+
+
+  </div>
+     
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+<aside>
+  <h4>No notes link to this note</h4>
+</aside>
+
+
+<aside class="related">
+  </aside>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dnjp.github.io/tags/plan-9/">Plan 9</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2023 <a href="https://dnjp.github.io">Daniel Posthuma</a></span>
+    <br>
+    <span>
+        Powered by
+        
+        
+       <a href="https://github.com/sawhney17/logseq-schrodinger" rel="noopener" target="_blank">Logseq Schrödinger</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

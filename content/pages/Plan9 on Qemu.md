@@ -1,6 +1,7 @@
 ---
-title: Plan9 on Qemu
 tags:
+- Plan 9
+title: Plan9 on Qemu
 categories:
 date: 2023-01-03
 lastMod: 2023-01-03
@@ -9,174 +10,172 @@ This guide assumes you are running a x86-64 Linux machine and that you have an u
 
 In the shell examples below, any snippet starting with `$: ` means that it should be executed on your Linux machine. Any snippet starting with `%: ` should be executed in the Plan 9 VM.
 
-Installation
+**Installation**
 
-The [run script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh) script can setup [9front](http://9front.org/), [9front-ANTS](http://ants.9gridchan.org/), or the [9legacy](http://9legacy.org/) distribution. Execute the install script and answer the prompts to install your selected distibution:
+  + The [run script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh) script can setup [9front](http://9front.org/), [9front-ANTS](http://ants.9gridchan.org/), or the [9legacy](http://9legacy.org/) distribution. Execute the install script and answer the prompts to install your selected distibution:
 
-`$: ./run.sh`
+    + `$: ./run.sh`
 
-Stick with the default options up until Plan 9 boots up. When asked what input device you would like to use, enter `ps2intellimouse`. You are now ready to install Plan 9. To do so, follow the install guide from the [9front FQA](http://fqa.9front.org/fqa4.html#4.1).
+  + Stick with the default options up until Plan 9 boots up. When asked what input device you would like to use, enter `ps2intellimouse`. You are now ready to install Plan 9. To do so, follow the install guide from the [9front FQA](http://fqa.9front.org/fqa4.html#4.1).
 
-When the installation is complete and you are kicked back out to the tty, shutdown the Qemu machine. Now you can simply execute the [run script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh) and select "run" to boot up your selected image.
+  + When the installation is complete and you are kicked back out to the tty, shutdown the Qemu machine. Now you can simply execute the [run script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/run.sh) and select "run" to boot up your selected image.
 
-Setting Resolution
+**Setting Resolution**
 
-Obtain a list of vesa bios modes
+  + Obtain a list of vesa bios modes
 
-`%: @{rfork n; aux/realemu; aux/vga -p}`
+    + `%: @{rfork n; aux/realemu; aux/vga -p}`
 
-Configure one of the valid modes
+  + Configure one of the valid modes
 
-`%: @{rfork n; aux/realemu; aux/vga -m vesa -l 1024x768x16}`
+    + `%: @{rfork n; aux/realemu; aux/vga -m vesa -l 1024x768x16}`
 
-You will likely want to persist this setting so that it is the same when you reboot the VM. To do that, modify the `vgasize` option in the `plan9.ini` file.
+  + You will likely want to persist this setting so that it is the same when you reboot the VM. To do that, modify the `vgasize` option in the `plan9.ini` file.
 
-Modifying plan9.ini
+**Modifying plan9.ini**
 
-Bind the local hard drive kernel device over /dev
+  + Bind the local hard drive kernel device over /dev
 
-`%: bind -b '#S' /dev`
+    + `%: bind -b '#S' /dev`
 
-Specify the full path to the corresponding 9fat
+  + Specify the full path to the corresponding 9fat
 
-`%: 9fs 9fat /dev/<your hd>/9fat`
+    + `%: 9fs 9fat /dev/<your hd>/9fat`
 
-Edit the file `/n/9fat/plan9.ini` to configure your desired boot settings. If the above does not work on your system, give [this script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/9fat) a try.
+  + Edit the file `/n/9fat/plan9.ini` to configure your desired boot settings. If the above does not work on your system, give [this script](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/9fat) a try.
 
-Create your own user
+**Create your own user**
 
-"glenda" is the default user on Plan 9. However, you will likely want to create a user for yourself. To do so, we will first connect to the Fossil file server console and create the new user:
+  + "glenda" is the default user on Plan 9. However, you will likely want to create a user for yourself. To do so, we will first connect to the Fossil file server console and create the new user:
 
-`%: con -l /srv/fscons`
+    + `%: con -l /srv/fscons`
 
-Once connected, your prompt will change to simply "prompt: ". First, create your user:
+  + Once connected, your prompt will change to simply "prompt: ". First, create your user:
 
-`prompt: uname <username> <username>`
+    + `prompt: uname <username> <username>`
 
-Then you can add your user to the groups that make sense. To give your user system privileges, add yourself to the `sys` group:
+  + Then you can add your user to the groups that make sense. To give your user system privileges, add yourself to the `sys` group:
 
-`prompt: uname <username> +sys`
+    + `prompt: uname <username> +sys`
 
-`prompt: uname sys +<username>`
+    + `prompt: uname sys +<username>`
 
-If you want access to `/adm` then add your user to the adm group:
+  + If you want access to `/adm` then add your user to the adm group:
 
-`prompt: uname adm +<username>`
+    + `prompt: uname adm +<username>`
 
-Type `CTL+\` and then type `q` at the prompt
+  + Type `CTL+\` and then type `q` at the prompt
 
-Now that the file system knows about our new user, we need to configure and enable the new user. First we'll start keyfs so we can change authentication information:
+  + Now that the file system knows about our new user, we need to configure and enable the new user. First we'll start keyfs so we can change authentication information:
 
-`%: auth/keyfs`
+    + `%: auth/keyfs`
 
-Then we will configure the user:
+  + Then we will configure the user:
 
-`%: auth/changeuser <username>`
+    + `%: auth/changeuser <username>`
 
-All that's left is to enable the user:
+  + All that's left is to enable the user:
 
-`%: auth/enable <username>`
+    + `%: auth/enable <username>`
 
-If the above fails, make sure that the auth/cpu kernel is running in your plan9.ini. To be sure, set `server=cpu` in the plan9.ini.
+  + If the above fails, make sure that the auth/cpu kernel is running in your plan9.ini. To be sure, set `server=cpu` in the plan9.ini.
 
-Setup Timezone
+**Setup Timezone**
 
-The available timezones are simply files in `/adm/timezone`. To select a
+  + The available timezones are simply files in `/adm/timezone`. To select a timezone, copy your selection to `/adm/timezone/local`:
 
-timezone, copy your selection to `/adm/timezone/local`:
+    + `%: cp /adm/timezone/<your selection> /adm/timezone/local`
 
-`%: cp /adm/timezone/<your selection> /adm/timezone/local`
+  + Then open up `/rc/bin/termrc` in sam or acme and change the TIMESYNCARGS:
 
-Then open up `/rc/bin/termrc` in sam or acme and change the TIMESYNCARGS:
+    + `TIMESYNCARGS=(-n pool.ntp.org)`
 
-`TIMESYNCARGS=(-n pool.ntp.org)`
+  + Then restart your system with `fshalt -r`.
 
-Then restart your system with `fshalt -r`.
+**Setup keyboard**
 
-Setup keyboard
+  + If you use a fairly standard layout, you're desired settings can most easily be changed with kbmap:
 
-If you use a fairly standard layout, you're desired settings can most easily be changed with kbmap:
+    + `%: kbmap`
 
-`%: kbmap`
+  + Right click your desired setting and then type "q" to quit. If you're using a layout like [Colemak](https://colemak.com/) (yours truly), then you can add the layout I have [here](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak) to kbmap:
 
-Right click your desired setting and then type "q" to quit. If you're using a layout like [Colemak](https://colemak.com/) (yours truly), then you can add the layout I have [here](https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak) to kbmap:
-
-
+    + 
 ```shell
 %: hget \
 	https://raw.githubusercontent.com/dnjp/plan9-on-qemu/master/extra/colemak \
 	> /sys/lib/kbmap/colemak
 ```
 
-Then just run `kbmap` as above and select "colemak". To persist these settings add something like the following to your `$home/lib/profile` directly above `rio` in the `terminal` case statement:
+  + Then just run `kbmap` as above and select "colemak". To persist these settings add something like the following to your `$home/lib/profile` directly above `rio` in the `terminal` case statement:
 
-`cat /sys/lib/kbmap/colemak > /dev/kbmap`
+    + `cat /sys/lib/kbmap/colemak > /dev/kbmap`
 
-Configure Rio
+**Configure Rio**
 
-Open up your `$home/lib/profile` with either `sam` or `acme`
+  + Open up your `$home/lib/profile` with either `sam` or `acme`
 
-`%: sam $home/lib/profile`
+    + `%: sam $home/lib/profile`
 
-If you're using sam, you will right click on the blue bar at the top and select the file you want to edit and then right click on the pale yellow buffer below it to bring that file into focus.
+  + If you're using sam, you will right click on the blue bar at the top and select the file you want to edit and then right click on the pale yellow buffer below it to bring that file into focus.
 
-Find the line that starts the rio window manager and add the `-s` option. The original will look something like this:
+  + Find the line that starts the rio window manager and add the `-s` option. The original will look something like this:
 
-`rio -i riostart`
+    + `rio -i riostart`
 
-To make rio autoscroll, add the `-s` option. If you'd prefer a black background, you can add the `-b` option. With both applied, the new command should look like this:
+  + To make rio autoscroll, add the `-s` option. If you'd prefer a black background, you can add the `-b` option. With both applied, the new command should look like this:
 
-`rio -b -s -i riostart`
+    + `rio -b -s -i riostart`
 
-If `$home/bin/rc/riostart` does not exist, create a mostly empty script that looks like this for now:
+  + If `$home/bin/rc/riostart` does not exist, create a mostly empty script that looks like this for now:
 
-`#!/bin/rc`
+    + `#!/bin/rc`
 
-Then make it executable with `chmod +x $home/bin/rc/riostart`. To automatically start DHCP when rio starts, add this line above the `switch` statement:
+  + Then make it executable with `chmod +x $home/bin/rc/riostart`. To automatically start DHCP when rio starts, add this line above the `switch` statement:
 
-`ip/ipconfig`
+    + `ip/ipconfig`
 
-You might want to change the default font as well. The best way to do that is to play around with the system fonts in acme. First, launch acme:
+  + You might want to change the default font as well. The best way to do that is to play around with the system fonts in acme. First, launch acme:
 
-`%: acme`
+    + `%: acme`
 
-To get a feel for how to use acme, I'd recommend watching the intro by [Russ Cox](https://www.youtube.com/watch?v=dP1xVpMPn8M). Once familiar with how to use acme, open the directory `/lib/font/bit/` and try changing the font by executing something like the following in an acme buffer:
+  + To get a feel for how to use acme, I'd recommend watching the intro by [Russ Cox](https://www.youtube.com/watch?v=dP1xVpMPn8M). Once familiar with how to use acme, open the directory `/lib/font/bit/` and try changing the font by executing something like the following in an acme buffer:
 
-`Font /lib/font/bit/terminus/unicode.14.font`
+    + `Font /lib/font/bit/terminus/unicode.14.font`
 
-Once you've found one you've liked, update your font selection in `$home/lib/profile`. When you are finished editing your `profile`, click on the blue bar to bring it into focus and enter `w` to write the file followed by `q` to quit, like this:
+  + Once you've found one you've liked, update your font selection in `$home/lib/profile`. When you are finished editing your `profile`, click on the blue bar to bring it into focus and enter `w` to write the file followed by `q` to quit, like this:
 
-
+    + 
 ```plain text
 w
 q
 ```
 
-When rio starts up you will see it has two windows open - one in the upper left showing system stats and a terminal window. The terminal window is a bit small for my taste, so let's make it bigger.
+  + When rio starts up you will see it has two windows open - one in the upper left showing system stats and a terminal window. The terminal window is a bit small for my taste, so let's make it bigger.
 
-Open up `$home/bin/rc/riostart` with sam:
+  + Open up `$home/bin/rc/riostart` with sam:
 
-`%: sam $home/bin/rc/riostart`
+    + `%: sam $home/bin/rc/riostart`
 
-Open up the the file in your editors buffer. You will see that there are two lines starting with `window`. The first sets the location and size for the stats window. The second is the location and size of our initial terminal window. This is the line we want to edit.
+  + Open up the the file in your editors buffer. You will see that there are two lines starting with `window`. The first sets the location and size for the stats window. The second is the location and size of our initial terminal window. This is the line we want to edit.
 
-Replace the contents of the second `window` line with the following:
+  + Replace the contents of the second `window` line with the following:
 
-`window 200,200,850,600`
+    + `window 200,200,850,600`
 
-Save and exit sam as you did before. Reboot the VM with the `fshalt` command:
+  + Save and exit sam as you did before. Reboot the VM with the `fshalt` command:
 
-`%: fshalt -r`
+    + `%: fshalt -r`
 
-Ports
+**Ports**
 
-There are ports of some unix tools and other applications that run on Plan 9 in the 9front ports. All you have to do is clone the ports tree into your system:
+  + There are ports of some unix tools and other applications that run on Plan 9 in the 9front ports. All you have to do is clone the ports tree into your system:
 
-`% hg clone http://code.9front.org/hg/ports /sys/ports`
+    + `% hg clone http://code.9front.org/hg/ports /sys/ports`
 
-Then to install a port, for example `media-fonts`, you would do this:
+  + Then to install a port, for example `media-fonts`, you would do this:
 
-
+    + 
 ```plain text
 %: cd /sys/ports/media-fonts
 %: mk nuke
@@ -185,23 +184,23 @@ Then to install a port, for example `media-fonts`, you would do this:
 %: mk install
 ```
 
-Setup Git
+**Setup Git**
 
-[git9](https://github.com/oridb/git9) is a git implementation for Plan 9 by Ori Bernstein ([oridb](https://github.com/oridb)) that works quite well on Plan 9. There are two ways to install git9 - using 9front Ports or via git for the most up to date changes.
+  + [git9](https://github.com/oridb/git9) is a git implementation for Plan 9 by Ori Bernstein ([oridb](https://github.com/oridb)) that works quite well on Plan 9. There are two ways to install git9 - using 9front Ports or via git for the most up to date changes.
 
-Using 9front Ports, the installation is very straight forward:
+  + Using 9front Ports, the installation is very straight forward:
 
-
+    + 
 ```plain text
 %: cd /sys/ports/dev-vcs/git9
 %: mk install
 ```
 
-For the git install, we'll first get a bootstrap version which will give us the `git` command and then we will setup the git9 repository in a place that you can easily update it in the future.
+  + For the git install, we'll first get a bootstrap version which will give us the `git` command and then we will setup the git9 repository in a place that you can easily update it in the future.
 
-Get the bootstrap version:
+  + Get the bootstrap version:
 
-
+    + 
 ```javascript
 %: cd /tmp
 %: hget https://github.com/oridb/git9/archive/master.tar.gz | tar xvz
@@ -211,9 +210,9 @@ Get the bootstrap version:
 
 ```
 
-Now we'll get the version from git which you can easily update:
+  + Now we'll get the version from git which you can easily update:
 
-
+    + 
 ```plain text
 %: cd $home/src
 %: git/clone https://github.com/oridb/git9
@@ -222,90 +221,90 @@ Now we'll get the version from git which you can easily update:
 %: mk install
 ```
 
-At this point, you should have a quick read of the man page for git and gitfs that come with git9:
+  + At this point, you should have a quick read of the man page for git and gitfs that come with git9:
 
-
+    + 
 ```plain text
 %: man 1 git
 %: man 4 gitfs
 ```
 
-Once you're familiarized with how git on Plan 9 works, let's get your git config setup:
+  + Once you're familiarized with how git on Plan 9 works, let's get your git config setup:
 
-
+    + 
 ```plain text
 %: mkdir -p $home/lib/git
 %: touch $home/lib/git/config
 %: sam $home/lib/git/config
 ```
 
-Add the following contents using your own information using tabs for indentation:
+  + Add the following contents using your own information using tabs for indentation:
 
-
+    + 
 ```plain text
 [user]
 	name = Your Name
     email = yourname@address.com
 ```
 
-The last part of this process is to setup your ssh keys with your git provider. First we'll generate the public and private keys:
+  + The last part of this process is to setup your ssh keys with your git provider. First we'll generate the public and private keys:
 
-
+    + 
 ```plain text
 %: mkdir $home/lib/ssh
 %: auth/rsagen -t 'service=ssh' > $home/lib/ssh/key
 %: auth/rsa2ssh $home/lib/ssh/key > $home/lib/ssh/key.pub
 ```
 
-Now that the keys exist, we need to add them to `factotum` so that you can authenticate using those keys:
+  + Now that the keys exist, we need to add them to `factotum` so that you can authenticate using those keys:
 
-
+    + 
 ```plain text
 %: cat $home/lib/ssh/key >/mnt/factotum/ctl
 %: ssh git@github.com
 %: ssh git@git.sr.ht
 ```
 
-You should get a success message saying that you have authenticated to Github in this case. You may also get an error message saying that Github does not provide shell access which is to be expected.
+  + You should get a success message saying that you have authenticated to Github in this case. You may also get an error message saying that Github does not provide shell access which is to be expected.
 
-Assuming that was successful, add both of those commands to `$home/lib/profile` so that you will be automatically authenticated. The man pages for git9 should give you most of the information that you need. The only other thing you may need to know is how to push to a repository using git+ssh instead of https. You can do that with a command like this:
+  + Assuming that was successful, add both of those commands to `$home/lib/profile` so that you will be automatically authenticated. The man pages for git9 should give you most of the information that you need. The only other thing you may need to know is how to push to a repository using git+ssh instead of https. You can do that with a command like this:
 
-`%: git/push -u git+ssh://git@github.com/youruser/yourrepo`
+    + `%: git/push -u git+ssh://git@github.com/youruser/yourrepo`
 
-For [Sourcehut](https://sourcehut.org/), you'll need to use ssh/git+ssh for read/write:
+  + For [Sourcehut](https://sourcehut.org/), you'll need to use ssh/git+ssh for read/write:
 
-
+    + 
 ```plain text
 %: git/clone ssh://git@git.sr.ht/~youruser/yourrepo
 %: git/clone git+ssh://git@git.sr.ht:~youruser/yourrepo
 ```
 
-An example configuration might look like this:
+  + An example configuration might look like this:
 
-
+    + 
 ```plain text
 [remote "origin"]
 	url = git+ssh://git@git.sr.ht:~youruser/yourrepo
     fetch = +refs/heads/*:refs/remotes/origin/*
 ```
 
-Install Go
+**Install Go**
 
-You will probably want to write programs in a language other than C while you're working on Plan 9. Go is a popular option and many programs for Plan 9 are written in Go.
+  + You will probably want to write programs in a language other than C while you're working on Plan 9. Go is a popular option and many programs for Plan 9 are written in Go.
 
-To install Go we will have to bootstrap the installation with an earlier version of Go already compiled for Plan 9. The process consists of obtaining the bootstap version and the target version, and telling the target version to use the bootstrapped version in order to build the toolchain.
+  + To install Go we will have to bootstrap the installation with an earlier version of Go already compiled for Plan 9. The process consists of obtaining the bootstap version and the target version, and telling the target version to use the bootstrapped version in order to build the toolchain.
 
-To get started we will first make the directory to temporarily house the installation:
+  + To get started we will first make the directory to temporarily house the installation:
 
-
+    + 
 ```plain text
 %: ramfs
 %: cd /tmp
 ```
 
-Then we'll download both the bootstrap and target versions of Go:
+  + Then we'll download both the bootstrap and target versions of Go:
 
-
+  + 
 ```plain text
 %: hget
 http://www.9legacy.org/download/go/go1.14.1-plan9-amd64-bootstrap.tbz | bunzip2
@@ -314,38 +313,38 @@ http://www.9legacy.org/download/go/go1.14.1-plan9-amd64-bootstrap.tbz | bunzip2
 %: hget https://golang.org/dl/go1.14.7.src.tar.gz | gunzip -c | tar x
 ```
 
-Now we'll make the directory which will contain our target installation and bind the version we downloaded to that target directory:
+  + Now we'll make the directory which will contain our target installation and bind the version we downloaded to that target directory:
 
-
+    + 
 ```plain text
 %: mkdir -p /sys/lib/go/amd64-1.14.7
 # bind downloaded go source to system go source
 %: bind -c go /sys/lib/go/amd64-1.14.7
 ```
 
-In order to ensure that the GOROOT is set correctly, we will change to the target directory when building Go and tell it where to locate our bootstrap installation:
+  + In order to ensure that the GOROOT is set correctly, we will change to the target directory when building Go and tell it where to locate our bootstrap installation:
 
-
+    + 
 ```plain text
 %: cd /sys/lib/go/amd64-1.14.7/src
 %: GOROOT_BOOTSTRAP=/tmp/go-plan9-amd64-bootstrap
 ```
 
-Next, configure loopback addresses so that the standard library tests will pass:
+  + Next, configure loopback addresses so that the standard library tests will pass:
 
-
+    + 
 ```plain text
 %: ip/ipconfig -P loopback /dev/null 127.1
 %: ip/ipconfig -P loopback /dev/null ::1
 ```
 
-Now that we have everything in place, it's time to start the install. Now's the time to go get some lunch or do something else because it will take quite a while:
+  + Now that we have everything in place, it's time to start the install. Now's the time to go get some lunch or do something else because it will take quite a while:
 
-`%: ./make.rc`
+    + `%: ./make.rc`
 
-If the install was successful, we can now persist the installation and do some cleanup:
+  + If the install was successful, we can now persist the installation and do some cleanup:
 
-
+    + 
 ```plain text
 %: unmount /sys/lib/go/amd64-1.14.7
 %: dircp /tmp/go /sys/lib/go/amd64-1.14.7
@@ -353,18 +352,18 @@ If the install was successful, we can now persist the installation and do some c
 %: unmount /tmp
 ```
 
-Next you will want to add a line like the following to your `profile` so that you can run executables in your GOPATH.
+  + Next you will want to add a line like the following to your `profile` so that you can run executables in your GOPATH.
 
-`bind -a $home/go/bin /bin`
+    + `bind -a $home/go/bin /bin`
 
-This is the equivalent of `export PATH=$PATH:/some/path` on Unix. You will also want to turn on the Go modules flag in your `$home/lib/profile`:
+  + This is the equivalent of `export PATH=$PATH:/some/path` on Unix. You will also want to turn on the Go modules flag in your `$home/lib/profile`:
 
-`GO111MODULE=on`
+    + `GO111MODULE=on`
 
-Now you'll need to get a ca cert for building most go modules:
+  + Now you'll need to get a ca cert for building most go modules:
 
-`%: hget https://curl.haxx.se/ca/cacert.pem >/sys/lib/tls/ca.pem`
+    + `%: hget https://curl.haxx.se/ca/cacert.pem >/sys/lib/tls/ca.pem`
 
-Next Steps
+**Next Steps**
 
-I will continue to keep this post updated with relevant information to make sure it's always up to date. If there is anything that you feel is missing, feel free to file an issue in Github. You may want to take a look at the [Plan 9 Wiki](https://9p.io/wiki/plan9/plan_9_wiki/) which contains useful articles and links which should help you get more familiar with Plan 9.
+  + I will continue to keep this post updated with relevant information to make sure it's always up to date. If there is anything that you feel is missing, feel free to file an issue in Github. You may want to take a look at the [Plan 9 Wiki](https://9p.io/wiki/plan9/plan_9_wiki/) which contains useful articles and links which should help you get more familiar with Plan 9.

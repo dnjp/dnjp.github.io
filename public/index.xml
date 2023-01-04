@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Daniel Posthuma</title>
+    <link>https://dnjp.github.io/</link>
+    <description>Recent content on Daniel Posthuma</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 03 Jan 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://dnjp.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>C</title>
+      <link>https://dnjp.github.io/pages/c/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/c/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Favorite Links &amp; Papers</title>
+      <link>https://dnjp.github.io/pages/favorite-links-papers/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/favorite-links-papers/</guid>
+      <description>Debugging Under Fire: Keep your Head when Systems have Lost their Mind - Bryan Cantrill
+When a Microsecond Is an Eternity: High Performance Trading Systems in C++ - Carl Cook
+Beating the Averages - Paul Graham
+Go Proverbs - Rob Pike
+The Ubiquitous File Server in Plan 9 - C H Forsyth (2005)
+The Styx Architecture for Distributed Systems - Rob Pike
+Plan 9 - Rob Pike, Dave Presotto, Sean Dorward, Bob Flandrena, Ken Thompson, Howard Trickey, Phil Winterbottom</description>
+    </item>
+    
+    <item>
+      <title>Plan 9</title>
+      <link>https://dnjp.github.io/pages/plan-9/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/plan-9/</guid>
+      <description>The goal of Plan 9 was to build a system that was centrally administered and cost-effective using cheap modern microcomputers as its computing elements. The idea was to build a time-sharing system using different computers that handle different tasks. Small machines in your office would serve as terminals to large, central, shared resources such as computing servers and file servers.
+Plan 9 is highly influenced by the Cambridge Distributed System. The early catch phrase was to build a UNIX out of a lot of little systems, not a system out of a lot of little UNIXes.</description>
+    </item>
+    
+    <item>
+      <title>Plan9 on Qemu</title>
+      <link>https://dnjp.github.io/pages/plan9-on-qemu/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/plan9-on-qemu/</guid>
+      <description>This guide assumes you are running a x86-64 Linux machine and that you have an up to date version of Qemu and curl installed. You may want to clone the repo containing useful scripts to help you get started.
+In the shell examples below, any snippet starting with $: means that it should be executed on your Linux machine. Any snippet starting with %: should be executed in the Plan 9 VM.</description>
+    </item>
+    
+    <item>
+      <title>Setup Plan 9 VPS and Drawterm on Linode</title>
+      <link>https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/setup-plan-9-vps-and-drawterm-on-linode/</guid>
+      <description>Plan 9 is a distributed system that expands on the “everything is a file” metaphor by making almost all components available to the network. Need more CPU for a compute heavy workload? Spin up a CPU server and add it to your network. Need access to that script your friend wrote? Mount their namespace over 9P and just use the script. The Organization of Networks in Plan 9 by Dave Presotto and Phil Winterbottom explains this in greater detail and provides the following summary for how Plan 9 is used in practice:</description>
+    </item>
+    
+    <item>
+      <title>Tools I Use</title>
+      <link>https://dnjp.github.io/pages/tools-i-use/</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://dnjp.github.io/pages/tools-i-use/</guid>
+      <description>I’ve tried a lot of different tools looking for those that are reliable, a joy to use, and visually appealing when applicable. These are the tools I’ve arrived at and currently use:
+Sublime Text
+An elegant and efficient text editor that balances productivity and configurability. Sublime Merge
+A desktop Git client that pairs well with Sublime Text. While nothing beats the power of Git on the command line, the majority of the time what I need is simple.</description>
+    </item>
+    
+    
+    
+  </channel>
+</rss>

@@ -5,5 +5,3 @@ categories:
 date: 2023-01-03
 lastMod: 2023-01-03
 ---
-C Programming
-
